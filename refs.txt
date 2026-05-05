@@ -1,0 +1,169 @@
+@article{ayres2015,
+  title={{FIGO} consensus guidelines on intrapartum fetal monitoring: Cardiotocography},
+  author={Ayres-de-Campos, Diogo and Spong, Catherine Y. and Chandraharan, Edwin},
+  journal={International Journal of Gynecology \& Obstetrics},
+  volume={131},
+  number={1},
+  pages={13--24},
+  year={2015}
+}
+
+@article{nazli2025,
+  title={Early detection of fetal health conditions using machine learning for classifying imbalanced cardiotocographic data},
+  author={Nazli, I. and Korbeko, E. and Dogru, S. and Kugu, E. and Sahingoz, O. K.},
+  journal={Diagnostics},
+  volume={15},
+  number={10},
+  pages={1250},
+  year={2025},
+  doi={10.3390/diagnostics15101250}
+}
+
+@article{das2023,
+  title={Fetal health classification from cardiotocograph for both stages of labor: A soft-computing-based approach},
+  author={Das, S. and Mukherjee, H. and Roy, K. and Saha, C. K.},
+  journal={Diagnostics},
+  volume={13},
+  number={5},
+  pages={858},
+  year={2023},
+  doi={10.3390/diagnostics13050858}
+}
+
+@article{mushtaq2024,
+  title={{AI} driven interpretable deep learning based fetal health classification},
+  author={Mushtaq, G. and Veningston, K.},
+  journal={SLAS Technology},
+  volume={29},
+  pages={100206},
+  year={2024},
+  doi={10.1016/j.slast.2024.100206}
+}
+
+@article{rahmayanti2022,
+  title={Comparison of machine learning algorithms to classify fetal health using cardiotocogram data},
+  author={Rahmayanti, N. and Pradani, H. and Pahlawan, M. and Vinarti, R.},
+  journal={Procedia Computer Science},
+  volume={197},
+  pages={162--171},
+  year={2022},
+  doi={10.1016/j.procs.2021.12.130}
+}
+
+@article{mehbodniya2022,
+  title={Fetal health classification from cardiotocographic data using machine learning},
+  author={Mehbodniya, A. and others},
+  journal={Expert Systems},
+  volume={39},
+  number={6},
+  pages={e12899},
+  year={2022},
+  doi={10.1111/exsy.12899}
+}
+
+@article{sirisha2024,
+  title={Dynamic multi-layer perceptron for fetal health classification using cardiotocography data},
+  author={Sirisha, U. and others},
+  journal={Computers, Materials \& Continua},
+  volume={80},
+  number={2},
+  pages={2301--2330},
+  year={2024},
+  doi={10.32604/cmc.2024.053132}
+}
+
+@article{kuzu2023,
+  title={Early diagnosis and classification of fetal health status from a fetal cardiotocography dataset using ensemble learning},
+  author={Kuzu, A. and Santur, Y.},
+  journal={Diagnostics},
+  volume={13},
+  number={15},
+  pages={2471},
+  year={2023},
+  doi={10.3390/diagnostics13152471}
+}
+
+@article{yin2023,
+  title={Using machine learning to classify human fetal health and analyze feature importance},
+  author={Yin, Y. and Bingi, Y.},
+  journal={BioMedInformatics},
+  volume={3},
+  number={2},
+  pages={280--302},
+  year={2023},
+  doi={10.3390/biomedinformatics3020019}
+}
+
+@article{francis2024,
+  title={Machine learning on cardiotocography data to classify fetal outcomes: A scoping review},
+  author={Francis, F. and Luz, S. and Wu, H. and Stock, S. J. and Townsend, R.},
+  journal={Computers in Biology and Medicine},
+  volume={172},
+  pages={108220},
+  year={2024},
+  doi={10.1016/j.compbiomed.2024.108220}
+}
+
+@article{chandraharan2024,
+  title={Physiological interpretation of cardiotocograph ({CTG}): Inter-observer and Observer-{AI} agreements},
+  author={Chandraharan, E. and others},
+  journal={Medical Research Archives},
+  volume={12},
+  number={11},
+  year={2024},
+  doi={10.18103/mra.v12i11.5980}
+}
+
+@misc{who2020,
+  title={A neglected tragedy: The global burden of stillbirths},
+  author={{WHO/UNICEF/World Bank}},
+  year={2020},
+  howpublished={WHO, Geneva},
+  url={https://www.who.int/publications/m/item/a-neglected-tragedy-the-global-burden-of-stillbirths}
+}
+
+@article{chawla2002,
+  title={{SMOTE}: Synthetic minority over-sampling technique},
+  author={Chawla, N. V. and Bowyer, K. W. and Hall, L. O. and Kegelmeyer, W. P.},
+  journal={Journal of Artificial Intelligence Research},
+  volume={16},
+  pages={321--357},
+  year={2002}
+}
+
+@inproceedings{lundberg2017,
+  title={A unified approach to interpreting model predictions},
+  author={Lundberg, S. M. and Lee, S.-I.},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
+  volume={30},
+  year={2017}
+}
+
+@article{pedregosa2011,
+  title={Scikit-learn: Machine learning in {Python}},
+  author={Pedregosa, F. and others},
+  journal={Journal of Machine Learning Research},
+  volume={12},
+  pages={2825--2830},
+  year={2011}
+}
+
+@article{breiman2001,
+  title={Random forests},
+  author={Breiman, L.},
+  journal={Machine Learning},
+  volume={45},
+  number={1},
+  pages={5--32},
+  year={2001}
+}
+
+@article{wilcoxon1945,
+  title={Individual comparisons by ranking methods},
+  author={Wilcoxon, F.},
+  journal={Biometrics Bulletin},
+  volume={1},
+  number={6},
+  pages={80--83},
+  year={1945}
+}

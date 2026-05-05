@@ -1,0 +1,507 @@
+% ============================================
+% ACM CONFERENCE TEMPLATE (SIGCONF) - GOLD STANDARD
+% ============================================
+\documentclass[sigconf]{acmart}
+% ============================================
+% PACKAGES 
+% ============================================
+\usepackage{amsmath}   % for equations
+
+% ============================================
+% COPYRIGHT & CONFERENCE INFO
+% ============================================
+\setcopyright{acmlicensed}
+\copyrightyear{2026}
+\acmYear{2026}
+\acmDOI{10.1145/xxxxxxx.xxxxxxx}   % Replace with actual DOI
+\acmConference[ICCA 2026]{4th International Conference on Computing Advancements}{October 15--16, 2026}{Dhaka, Bangladesh}
+\acmISBN{978-1-4503-XXXX-X/18/06}   % Replace with actual ISBN
+
+% ============================================
+% BEGIN DOCUMENT (Must be placed here)
+% ============================================
+\begin{document}
+
+% ============================================
+% TITLE AND AUTHORS
+% ============================================
+\title{Leakage-Free Imbalanced Learning for Cardiotocography-Based Fetal Health Classification}
+
+\author{Durjoy Roy}
+\affiliation{%
+  \institution{American International University-Bangladesh (AIUB)}
+  \city{Dhaka}
+  \country{Bangladesh}
+}
+\email{roy.idurjoy@gmail.com}   % Note: Verify if your university uses @student.aiub.edu
+
+\author{Seemanta Torafdar}
+\affiliation{%
+  \institution{American International University-Bangladesh (AIUB)}
+  \city{Dhaka}
+  \country{Bangladesh}
+}
+\email{seemantatarofdar@gmail.com}
+
+\author{Md. Jobarul Islam}
+\affiliation{%
+  \institution{American International University-Bangladesh (AIUB)}
+  \city{Dhaka}
+  \country{Bangladesh}
+}
+\email{22-49971-3@student.aiub.edu}
+
+% ============================================
+% ABSTRACT 
+% ============================================
+\begin{abstract}
+Cardiotocography (CTG) is the primary intrapartum fetal monitoring tool, yet manual interpretation is prone to inter-observer variability. This study develops a leakage-free machine learning pipeline for automated fetal health classification from CTG features, explicitly addressing severe class imbalance. Using the public UCI CTG dataset (2,113 unique records; classes: Normal 77.9\%, Suspect 13.8\%, Pathological 8.3\%), we apply StandardScaler and SMOTE strictly within 10-fold stratified cross-validation, optimizing macro recall. Among seven classifiers, Random Forest achieves the highest cross-validated macro recall (90.14\%) and significantly outperforms MLP (Wilcoxon p = 0.0098). On a held-out test set, RF attains 94.6\% accuracy and 88.9\% macro recall. SHAP analysis identifies abnormal short-term variability and prolonged decelerations as dominant predictors for the Pathological class. A leakage-free, SMOTE-within-CV RF pipeline provides strong balanced performance and clinically meaningful explanations, supporting its potential as a transparent decision-support tool.
+\end{abstract}
+
+% ============================================
+% CCS CONCEPTS (ACM CLASSIFICATION)
+% ============================================
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010147.10010257.10010293.10010294</concept_id>
+       <concept_desc>Computing methodologies~Neural networks</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10010405.10010444.10010449</concept_id>
+       <concept_desc>Applied computing~Health informatics</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computing methodologies~Neural networks}
+\ccsdesc[500]{Applied computing~Health informatics}
+
+% ============================================
+% KEYWORDS
+% ============================================
+\keywords{Cardiotocography; fetal health classification; class imbalance; SMOTE; Random Forest; macro recall; SHAP; calibration}
+
+% ============================================
+% MAKETITLE (Must be placed after Abstract & CCS)
+% ============================================
+\maketitle
+
+============================================
+% 1. INTRODUCTION
+% ============================================
+\section{Introduction}
+\label{sec:introduction}
+
+Adverse perinatal outcomes remain a major clinical concern, and continuous intrapartum monitoring is routinely used to detect early signs of fetal compromise. Cardiotocography (CTG), which jointly records fetal heart rate (FHR) and uterine contractions, is one of the most widely used monitoring modalities in obstetric care \cite{ayres2015}. However, CTG interpretation is inherently challenging: clinical decision-making often depends on subtle patterns in baseline rate, variability, accelerations, and decelerations, and manual assessment is prone to inter-observer variability and inconsistent adherence to clinical criteria. These limitations motivate decision-support systems that can provide consistent, data-driven risk stratification from routine CTG recordings.
+
+Developing reliable machine learning (ML) models for CTG-based fetal health classification is nevertheless non-trivial, primarily due to severe class imbalance. In the widely used UCI CTG dataset, Normal cases dominate ($\approx$ 77.9\%), while Suspect and Pathological outcomes represent substantially smaller fractions ($\approx$ 13.8\% and $\approx$ 8.3\%, respectively). In such settings, overall accuracy can be misleading because a model may achieve high accuracy while still under-detecting minority-class cases that are clinically critical. Therefore, evaluation should emphasize class-balanced measures such as macro-averaged recall, which assigns equal importance to each class and aligns with the clinical objective of avoiding missed detections in high-risk categories.
+
+A second methodological challenge is data leakage in resampling-based pipelines. Oversampling methods such as the Synthetic Minority Oversampling Technique (SMOTE) \cite{chawla2002} are widely used to mitigate imbalance, but incorrect placement of SMOTE (e.g., applying it before cross-validation splitting) can allow information from validation folds to influence training data. This leakage inflates performance estimates and undermines reproducibility — an especially important concern for clinical decision support, where generalization and transparent reporting are essential. Accordingly, a leakage-free evaluation protocol is as important as model choice.
+
+In this work, we present a leakage-free, statistically supported, and interpretable ML pipeline for three-class fetal health classification from CTG features. Using a scikit-learn \cite{pedregosa2011} pipeline, we apply preprocessing (StandardScaler) and SMOTE strictly within each training fold of stratified 10-fold cross-validation. We compare seven classifiers representing diverse learning paradigms: k-Nearest Neighbors, Logistic Regression, Decision Tree, Naïve Bayes, Multi-Layer Perceptron, a soft-voting ensemble, and Random Forest \cite{breiman2001}. Model selection is driven by macro recall, with hyperparameters optimized via GridSearchCV on predefined parameter grids. Beyond point estimates, we quantify uncertainty using confidence intervals and assess paired differences between models via the Wilcoxon signed-rank test \cite{wilcoxon1945}. Finally, we employ SHAP TreeExplainer \cite{lundberg2017} to provide feature-level explanations, highlighting the predictors most responsible for Pathological-class decisions.
+
+% ============================================
+% 2. RELATED WORK
+% ============================================
+\section{Related Work}
+\label{sec:related_work}
+
+Machine learning approaches for cardiotocography (CTG)-based fetal health classification have been actively investigated, largely using supervised models trained on CTG-derived (engineered) features. Prior studies have evaluated a wide range of classical classifiers, tree ensembles, gradient boosting methods, and neural architectures, often reporting strong aggregate performance on standard CTG datasets. However, the literature also reveals recurring limitations that become critical under severe class imbalance and in clinically oriented evaluation settings.
+
+Nazli et al.~\cite{nazli2025} performed a comprehensive comparison across multiple machine learning models on a CTG dataset with 21 features, applying SMOTE to mitigate imbalance and reporting strong overall and balanced accuracy. While the breadth of models and the inclusion of imbalance correction are valuable, the evaluation emphasis remains largely aggregate, with limited focus on class-balanced selection objectives (e.g., macro-averaged recall) and clinically critical minority-class sensitivity.
+
+Das et al.~\cite{das2023} proposed a framework that distinguishes CTG dynamics across different stages of labor and applied SMOTE only on training data to reduce leakage risk, reflecting strong methodological awareness. Nevertheless, minority-class recall for Suspect and Pathological cases is not consistently foregrounded as a primary objective, and the reporting does not fully center on class-balanced decision-making.
+
+Rahmayanti et al.~\cite{rahmayanti2022} conducted grid-search-based optimization and reported class-wise precision, recall, and F1-scores, supporting the importance of class-level reporting in three-class CTG classification. However, the imbalance mitigation relied on basic up-sampling rather than synthetic oversampling strategies such as SMOTE, and leakage-free placement of resampling within cross-validation is not always presented as a central requirement.
+
+Mushtaq and Veningston~\cite{mushtaq2024} compared classical baselines with deep learning approaches and reported very high overall performance. While these results indicate the potential of complex models, high accuracy alone can be difficult to interpret under imbalance without explicit emphasis on minority-class sensitivity and conservative, leakage-free evaluation protocols. Mehbodniya et al.~\cite{mehbodniya2022} reported strong cross-validated results using multiple models and examined feature contributions; however, class-balanced selection and leakage-free imbalance correction are not consistently treated as primary methodological constraints.
+
+Ensemble-based approaches such as those proposed by Kuzu and Santur~\cite{kuzu2023} can deliver high performance, but complex stacked architectures may limit clinical auditability unless supported by transparent evaluation and detailed minority-class error analysis. Similarly, deep neural architectures such as the dynamic MLP proposed by Sirisha et al.~\cite{sirisha2024} demonstrate the potential of systematic preprocessing and tuning, yet they are less inherently interpretable than linear or tree-based models unless complemented by robust explainability. Finally, explainability-focused frameworks, such as the feature-importance methodology introduced by Yin and Bingi~\cite{yin2023}, reinforce that transparency is essential for clinical use, but interpretability becomes most meaningful when paired with leakage-free evaluation and metrics explicitly aligned with minority-class detection.
+
+Overall, prior work establishes strong feasibility for CTG-based fetal health classification but leaves open a practical need for pipelines that jointly emphasize (i) leakage-free imbalance correction, (ii) class-balanced model selection aligned with clinically critical sensitivity, (iii) statistically supported comparisons across competitive baselines, and (iv) feature-level explanations that remain clinically plausible and auditable.
+
+\subsection{Research Gaps and Motivation}
+\label{subsec:research_gaps}
+
+A synthesis of prior research reveals three persistent and clinically consequential gaps that motivate this study. First, many studies continue to rely on overall accuracy or aggregate measures as the primary evaluation criterion; in severely imbalanced CTG datasets this can mask poor sensitivity for minority Suspect and Pathological cases, where false negatives are clinically costly. Second, even when oversampling is used, leakage-free placement of preprocessing and SMOTE strictly within cross-validation training folds is not always clearly enforced or reported, which can inflate performance estimates and reduce reproducibility. Third, high-performing pipelines often employ complex architectures that are difficult to audit clinically, while interpretability is not consistently integrated into evaluation to verify whether learned decision logic is clinically plausible. To address these gaps, this work prioritizes macro-averaged recall for model selection, applies \texttt{StandardScaler} and SMOTE strictly within each cross-validation training fold, validates differences via paired non-parametric testing, and provides SHAP-based explanations for Pathological predictions.
+
+\subsection{Contributions}
+\label{subsec:contributions}
+
+To address the aforementioned gaps, the primary contributions of this study are as follows:
+\begin{itemize}
+    \item \textbf{Leakage-Free SMOTE Pipeline:} We propose a strictly leakage-free imbalanced-learning pipeline for CTG classification in which \texttt{StandardScaler} and SMOTE are applied exclusively within each training fold of stratified cross-validation, reducing the risk of optimistically biased estimates for minority-class detection.
+    \item \textbf{Macro Recall Optimization:} We perform macro-recall-driven model selection using \texttt{GridSearchCV} under 10-fold stratified cross-validation, comparing seven widely used classifiers, including a soft-voting ensemble and Random Forests.
+    \item \textbf{Statistical Validation:} We report reliability and statistical evidence through 95\% confidence intervals and paired Wilcoxon signed-rank tests on cross-validation scores (e.g., RF vs.\ MLP and RF vs.\ soft voting).
+    \item \textbf{SHAP Explainability:} We provide model interpretability using SHAP \texttt{TreeExplainer}, highlighting dominant predictors for the Pathological class (e.g., \texttt{abnormal\_short\_term\_variability}, \texttt{histogram\_mean}, and \texttt{prolongued\_decelerations}), thereby supporting transparent clinical interpretation.
+\end{itemize}
+% ============================================
+% ============================================
+% 3. MATERIALS AND METHODS
+% ============================================
+\section{Materials and Methods}
+\label{sec:methods}
+
+% -------------------------------------------------
+\subsection{Dataset and Problem Definition}
+\label{subsec:dataset}
+
+This study used the publicly available UCI Cardiotocography (CTG) dataset. The dataset contained zero missing values. After removing duplicate records, the final cohort comprised 2,113 instances described by 21 hand-engineered CTG features summarizing fetal heart rate (FHR) characteristics, variability patterns, deceleration/acceleration behavior, and histogram-derived descriptors. The prediction target was fetal health status, formulated as a three-class classification problem with the following label mapping: Normal = 1, Suspect = 2, and Pathological = 3. The resulting class distribution was strongly imbalanced, with approximately 77.9\% Normal, 13.8\% Suspect, and 8.3\% Pathological samples.
+
+% -------------------------------------------------
+\subsection{Train--Test Split and Cross-Validation Protocol}
+\label{subsec:split}
+
+To obtain an unbiased final evaluation, the dataset was partitioned into training and test sets using an \textbf{80/20 split} (\texttt{test\_size = 0.20}) with \textbf{stratification by the target label} (\texttt{stratify = y}) to preserve class distribution across splits. A fixed \texttt{random\_state = 42} was used for reproducibility. All hyperparameter tuning and model selection were performed exclusively on the training set.
+
+Within the training set, candidate models were evaluated using \textbf{10-fold stratified cross-validation}. Due to severe class imbalance and the clinical importance of minority-class sensitivity, \textbf{macro-averaged recall} was used as the primary selection metric. Macro recall computes recall for each class and averages across classes, thereby giving equal importance to Normal, Suspect, and Pathological classes.
+
+% -------------------------------------------------
+\subsection{Leakage-Free Preprocessing and Resampling Pipeline}
+\label{subsec:pipeline}
+
+A leakage-free pipeline was implemented to ensure that performance estimates reflect true generalization. All preprocessing and resampling steps were encapsulated within a single pipeline that was fit \textbf{only on the training portion of each cross-validation fold}. The pipeline sequence was:
+
+\begin{enumerate}
+    \item \textbf{StandardScaler} for feature normalization,
+    \item \textbf{SMOTE (Synthetic Minority Oversampling Technique)} \cite{chawla2002} to address class imbalance, and
+    \item the downstream classifier.
+\end{enumerate}
+
+Importantly, \textbf{SMOTE was applied strictly within each training fold}. This prevents information from the validation fold from influencing the training data through synthetic sample generation, thereby avoiding optimistic bias that can arise in naïve workflows where oversampling is performed prior to cross-validation splitting.
+
+For a given class $c$, recall is defined as:
+\begin{equation}
+\label{eq:recall}
+\text{Recall}_c = \frac{TP_c}{TP_c + FN_c}
+\end{equation}
+
+Macro-averaged recall is computed as:
+\begin{equation}
+\label{eq:macro_recall}
+\text{Recall}_{macro} = \frac{1}{K} \sum_{c=1}^{K} \text{Recall}_c
+\end{equation}
+
+For completeness, precision for class $c$ is defined as:
+\begin{equation}
+\label{eq:precision}
+\text{Precision}_c = \frac{TP_c}{TP_c + FP_c}
+\end{equation}
+
+The F1-score for class $c$ is the harmonic mean of precision and recall:
+\begin{equation}
+\label{eq:f1}
+\text{F1}_c = \frac{2 \cdot \text{Precision}_c \cdot \text{Recall}_c}{\text{Precision}_c + \text{Recall}_c}
+\end{equation}
+
+Macro-averaged F1-score is:
+\begin{equation}
+\label{eq:macro_f1}
+\text{F1}_{macro} = \frac{1}{K} \sum_{c=1}^{K} \text{F1}_c
+\end{equation}
+
+% -------------------------------------------------
+\subsection{Models Compared}
+\label{subsec:models}
+
+Seven supervised learning approaches were evaluated to cover a diverse set of modeling paradigms:
+
+\begin{itemize}
+    \item \textbf{k-Nearest Neighbors (k-NN):} An instance-based learning algorithm that classifies samples based on Euclidean distance to the nearest neighbors in the feature space.
+    \item \textbf{Logistic Regression (multinomial):} A linear classifier employing a multinomial formulation, optimized using the \texttt{lbfgs} solver to estimate class probabilities.
+    \item \textbf{Decision Tree (DT):} A nonlinear, rule-based classifier that recursively partitions the feature space into decision regions.
+    \item \textbf{Gaussian Naïve Bayes (NB):} A probabilistic generative model that assumes feature independence and Gaussian-distributed features within each class.
+    \item \textbf{Multi-Layer Perceptron (MLP):} A feed-forward artificial neural network trained using backpropagation, with architectures defined by tuned hidden-layer configurations.
+    \item \textbf{Soft-voting ensemble:} A probability-based ensemble method that combines predictions from Logistic Regression, Decision Tree, and Random Forest using soft voting.
+    \item \textbf{Random Forest (RF):} An ensemble of decision trees trained via bootstrap aggregation (bagging), configured with \texttt{class\_weight = "balanced"} to mitigate class imbalance \cite{breiman2001}.
+\end{itemize}
+
+% -------------------------------------------------
+\subsection{Hyperparameter Optimization}
+\label{subsec:hyperparams}
+
+Hyperparameter tuning was performed on the training set using \textbf{GridSearchCV} under the same \textbf{10-fold stratified cross-validation} strategy described previously, with \textbf{macro-averaged recall} as the optimization criterion (\texttt{scoring = "recall\_macro"}). Parameter grids were defined at the pipeline level (with the classifier step named \texttt{clf}) as follows:
+
+\begin{itemize}
+    \item \textbf{k-Nearest Neighbors:} \texttt{clf\_\_n\_neighbors} $\in \{3, 5, 7, 9\}$
+    \item \textbf{Logistic Regression:} \texttt{clf\_\_C} $\in \{0.1, 1, 10\}$, with \texttt{max\_iter = 2000}, \texttt{solver = "lbfgs"}, and \texttt{multi\_class = "multinomial"}
+    \item \textbf{Decision Tree:} \texttt{clf\_\_max\_depth} $\in \{5, 10, \text{None}\}$, with \texttt{random\_state = 42}
+    \item \textbf{Random Forest:} \texttt{clf\_\_n\_estimators} $\in \{100, 200, 300\}$ and \texttt{clf\_\_max\_depth} $\in \{5, 10, \text{None}\}$, with \texttt{class\_weight = "balanced"}
+    \item \textbf{Multi-Layer Perceptron (MLP):} \texttt{clf\_\_hidden\_layer\_sizes} $\in \{(50,), (100,), (100, 50)\}$, with \texttt{max\_iter = 1000}, \texttt{early\_stopping = True}, and \texttt{random\_state = 42}
+\end{itemize}
+
+Gaussian Naïve Bayes was evaluated as an \textbf{untuned baseline}. For each model, the best-performing configuration selected by GridSearchCV corresponds to the complete pipeline (feature scaling, SMOTE, and classifier), and was retained for downstream analysis.
+
+% -------------------------------------------------
+\subsection{Held-Out Test Set Evaluation}
+\label{subsec:test_eval}
+
+Following cross-validated tuning and model selection, the \textbf{best estimator for each classifier} was evaluated on the held-out test set. Performance was summarized using \textbf{accuracy}, \textbf{macro-averaged recall}, and \textbf{macro F1-score}, supplemented with confusion-matrix analysis to characterize class-wise error patterns.
+
+Accuracy is defined as:
+\begin{equation}
+\label{eq:accuracy}
+\text{Accuracy} = \frac{\sum_{c=1}^{K} TP_c}{N}
+\end{equation}
+where $TP_c$ denotes the number of correctly classified samples for class $c$, and $N$ is the total number of test samples.
+
+Macro-averaged recall (repeated for completeness) is:
+\begin{equation}
+\text{Recall}_{macro} = \frac{1}{K} \sum_{c=1}^{K} \frac{TP_c}{TP_c + FN_c}
+\end{equation}
+
+Macro-averaged F1-score is:
+\begin{equation}
+\text{F1}_{macro} = \frac{1}{K} \sum_{c=1}^{K}
+\frac{2 \cdot TP_c}{2 \cdot TP_c + FP_c + FN_c}
+\end{equation}
+
+Confusion matrix analysis was additionally used to examine class-wise prediction errors and misclassification patterns across Normal, Suspect, and Pathological classes. This held-out evaluation was reported descriptively to complement cross-validation results and to provide an additional estimate of out-of-sample generalization performance.
+
+% -------------------------------------------------
+\subsection{Uncertainty Quantification and Statistical Testing}
+\label{subsec:uncertainty}
+
+To report uncertainty beyond point estimates, performance metrics were accompanied by \textbf{95\% confidence intervals (CIs)}. For test-set macro recall, uncertainty was quantified using \textbf{bootstrap resampling with 1,000 iterations}, generating an empirical distribution of macro recall values.
+
+Let $\hat{R}_b$ denote the macro recall computed on the $b$-th bootstrap sample. The bootstrap estimate of the metric distribution is:
+\begin{equation}
+\label{eq:bootstrap}
+\{ \hat{R}_1, \hat{R}_2, \dots, \hat{R}_B \}, \quad B = 1000
+\end{equation}
+
+The \textbf{95\% bootstrap confidence interval} is obtained using the percentile method:
+\begin{equation}
+\label{eq:bootstrap_ci}
+\text{CI}_{95\%} = \left[ \hat{R}_{(2.5\%)}, \; \hat{R}_{(97.5\%)} \right]
+\end{equation}
+where $\hat{R}_{(2.5\%)}$ and $\hat{R}_{(97.5\%)}$ denote the 2.5th and 97.5th percentiles of the bootstrap distribution.
+
+\subsubsection{Statistical Significance Testing}
+\label{subsubsec:wilcoxon}
+
+To assess whether observed performance differences were statistically meaningful, paired \textbf{Wilcoxon signed-rank tests} \cite{wilcoxon1945} were conducted on fold-level cross-validation macro-recall scores.
+
+Let $d_i = R_i^{(A)} - R_i^{(B)}$ denote the difference in macro recall between two models $A$ and $B$ on the $i$-th fold. The Wilcoxon test evaluates whether the median of the paired differences is zero:
+\begin{equation}
+\label{eq:wilcoxon_h0}
+H_0: \text{median}(d_i) = 0
+\end{equation}
+
+The test statistic is computed by ranking the absolute differences $|d_i|$ and summing the signed ranks:
+\begin{equation}
+\label{eq:wilcoxon_w}
+W = \sum_{i=1}^{n} \text{sgn}(d_i) \cdot \text{rank}(|d_i|)
+\end{equation}
+where $\text{sgn}(d_i)$ is the sign of $d_i$ and $n$ is the number of folds.
+
+The resulting $p$-value is compared against the significance level $\alpha = 0.05$ to determine statistical significance. Comparisons focused on the champion model (\textbf{Random Forest}) against strong baselines, including \textbf{RF vs MLP} and \textbf{RF vs the soft-voting ensemble}.
+
+% -------------------------------------------------
+\subsection{Model Explainability}
+\label{subsec:shap}
+
+To support interpretability, feature-level explanations were obtained for the best-performing model using \textbf{SHAP (SHapley Additive exPlanations)} with \textbf{TreeExplainer} for Random Forests \cite{lundberg2017}.
+
+For a given input sample $x$, the SHAP value $\phi_j$ represents the contribution of feature $j$ to the model prediction relative to a baseline. The prediction can be expressed as:
+\begin{equation}
+\label{eq:shap}
+f(x) = \phi_0 + \sum_{j=1}^{M} \phi_j
+\end{equation}
+where $\phi_0$ is the expected model output (baseline) and $\phi_j$ is the contribution of feature $j$.
+
+Global feature importance for the \textbf{Pathological} class was computed by aggregating the mean absolute SHAP values across all samples:
+\begin{equation}
+\label{eq:shap_importance}
+\text{Importance}_j = \frac{1}{N} \sum_{i=1}^{N} \left| \phi_j^{(i)} \right|
+\end{equation}
+where $\phi_j^{(i)}$ denotes the SHAP value of feature $j$ for the $i$-th sample, and $N$ is the number of samples.
+
+The dominant predictors identified were \texttt{abnormal\_short\_term\_variability}, \texttt{histogram\_mean}, and \texttt{prolongued\_decelerations}, which are consistent with clinically meaningful CTG patterns associated with fetal compromise.
+% ============================================
+% 4. RESULTS
+% ============================================
+\section{Results}
+\label{sec:results}
+
+% -------------------------------------------------
+\subsection{Cross-Validation Performance}
+\label{subsec:cv}
+
+Table~\ref{tab:cv} presents the 10-fold stratified cross-validation macro recall scores for all seven classifiers. Random Forest achieved the highest mean macro recall of 0.9014 (90.14\%), with a 95\% CI of 87.25\%--93.04\%, demonstrating the most consistent performance across folds. The soft-voting ensemble ranked second (0.8842), followed by MLP (0.8650). Na\"{i}ve Bayes showed the lowest performance (0.7910) with the highest variability.
+
+\begin{table}[ht]
+\centering
+\caption{Cross-Validation Macro Recall (10-fold Stratified CV)}
+\label{tab:cv}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model} & \textbf{Mean} & \textbf{Std} \\
+\midrule
+Random Forest        & 0.9014 & 0.040 \\
+Soft Voting Ensemble & 0.8842 & 0.042 \\
+MLP                  & 0.8650 & 0.051 \\
+Decision Tree        & 0.8520 & 0.055 \\
+Logistic Regression  & 0.8310 & 0.048 \\
+k-NN                 & 0.8250 & 0.050 \\
+Na\"{i}ve Bayes      & 0.7910 & 0.060 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -------------------------------------------------
+\subsection{Statistical Significance Testing}
+\label{subsec:significance}
+
+Table~\ref{tab:wilcoxon} presents the results of paired Wilcoxon signed-rank tests comparing Random Forest against the two closest competitors. RF significantly outperformed MLP ($p = 0.009766$, $\alpha = 0.05$), while the difference between RF and the soft-voting ensemble was not statistically significant ($p = 0.130859$).
+
+\begin{table}[ht]
+\centering
+\caption{Paired Wilcoxon Signed-Rank Test Results}
+\label{tab:wilcoxon}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Comparison} & \textbf{$\alpha$} & \textbf{$p$-value} & \textbf{Significant} \\
+\midrule
+RF vs.\ MLP          & 0.05 & 0.009766 & Yes \\
+RF vs.\ Soft Voting  & 0.05 & 0.130859 & No  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -------------------------------------------------
+\subsection{Random Forest Confidence Interval}
+\label{subsec:rf_ci}
+
+The cross-validated macro recall for the best Random Forest configuration was 90.14\% (95\% CI: 87.25\%--93.04\%), with best hyperparameters \texttt{n\_estimators = 200} and \texttt{max\_depth = None}.
+
+% -------------------------------------------------
+\subsection{Held-Out Test Set Performance}
+\label{subsec:test_perf}
+
+Table~\ref{tab:test} summarises the held-out test set results for the best Random Forest estimator. RF attained 94.56\% accuracy, 88.87\% macro recall (bootstrap 95\% CI: 83.99\%--93.54\%), and 90.11\% macro F1-score, confirming that cross-validation performance generalises to unseen data.
+
+\begin{table}[ht]
+\centering
+\caption{Held-Out Test Set Performance (Random Forest)}
+\label{tab:test}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Value} & \textbf{95\% CI} \\
+\midrule
+Accuracy      & 0.9456 & ---                 \\
+Macro Recall  & 0.8887 & 0.8399\,--\,0.9354  \\
+Macro F1      & 0.9011 & ---                 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% -------------------------------------------------
+\subsection{Confusion Matrix Analysis}
+\label{subsec:cm}
+
+Figure~\ref{fig:cm} presents confusion matrices for all seven classifiers on the held-out test set. Random Forest achieved the strongest overall pattern, correctly classifying 324 of 330 Normal samples, 43 of 58 Suspect samples, and 33 of 35 Pathological samples, yielding the fewest critical false negatives for the minority Pathological class (only 2 missed). Na\"{i}ve Bayes exhibited the weakest performance, misclassifying 12 Normal samples as Suspect and 15 Pathological samples as Suspect, resulting in the lowest Pathological recall (20 correct out of 35). The soft-voting ensemble and Decision Tree both demonstrated zero or near-zero false negatives on the Normal class but showed more confusion between Suspect and Pathological categories than RF.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{picture/fig_confusion_matrices.png}
+\caption{Confusion matrices for all seven classifiers on the held-out test set (Normal, Suspect, Pathological). RF achieves the best Pathological recall with only 2 missed detections. NB shows the highest minority-class confusion. Rows represent true labels; columns represent predicted labels.}
+\Description{Seven confusion matrix plots for k-NN, Logistic Regression, Decision Tree, Naïve Bayes, MLP, Random Forest, and soft-voting ensemble. Random Forest shows the highest diagonal counts for all three classes. Naïve Bayes shows the most off-diagonal errors.}
+\label{fig:cm}
+\end{figure*}
+
+% -------------------------------------------------
+\subsection{Learning Curve}
+\label{subsec:lc}
+
+Figure~\ref{fig:lc} shows the Random Forest learning curve, plotting training and cross-validated macro recall as a function of training set size. The training recall remains at 1.0 throughout, indicating that RF fits the training data perfectly at all sizes. The validation recall rises steeply from $\approx$0.75 at 150 samples and converges toward $\approx$0.90 as the training set approaches its full size ($\approx$1,500 samples). The narrowing confidence band at larger training sizes indicates stable generalization, and the absence of a diverging gap between training and validation curves at the full dataset size suggests that overfitting is not a major concern under the leakage-free SMOTE pipeline. Additional data beyond $\approx$1,200 samples provides diminishing returns, suggesting the model is near its performance ceiling on this dataset.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{picture/fig_learning_curve.png}
+\caption{Learning curve for Random Forest (macro recall). Training recall (blue) remains at 1.0 throughout; validation recall (orange) converges to $\approx$0.90 at full training size, with a narrowing confidence band indicating stable generalization.}
+\Description{Line plot with shaded confidence intervals. Training macro recall stays constant at 1.0. Validation macro recall rises from 0.75 to 0.90 as training set size increases from 150 to 1,500 samples.}
+\label{fig:lc}
+\end{figure}
+
+% -------------------------------------------------
+\subsection{Feature Importance}
+\label{subsec:fi}
+
+Figure~\ref{fig:fi} presents Gini-based feature importance for the Decision Tree and Random Forest classifiers. For the Decision Tree, \texttt{histogram\_mean} (0.25) and \texttt{mean\_value\_of\_short\_term\_variability} (0.23) are the two dominant splits, together accounting for nearly half the total impurity reduction. For Random Forest, importance is more distributed across features, with \texttt{abnormal\_short\_term\_variability} (0.125) and \texttt{percentage\_of\_time\_with\_abnormal\_long\_term\_variability} (0.120) ranked first and second, followed by \texttt{histogram\_mean} (0.105). The broader distribution of importance in RF relative to DT reflects the ensemble's ability to exploit a wider range of discriminative features, reducing reliance on any single split and contributing to its superior generalization performance.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{picture/fig_feature_importance.png}
+\caption{Gini-based feature importance for Decision Tree (left) and Random Forest (right), showing the top-10 features by mean impurity decrease. RF distributes importance more evenly across features, while DT relies heavily on \texttt{histogram\_mean} and \texttt{mean\_value\_of\_short\_term\_variability}.}
+\Description{Two horizontal bar charts. Left: Decision Tree – histogram\_mean (0.25), mean\_value\_of\_short\_term\_variability (0.23). Right: Random Forest – abnormal\_short\_term\_variability (0.125), percentage\_of\_time\_with\_abnormal\_long\_term\_variability (0.120), histogram\_mean (0.105).}
+\label{fig:fi}
+\end{figure*}
+
+% -------------------------------------------------
+\subsection{SHAP Explainability --- Pathological Class}
+\label{subsec:shap_path}
+
+Figure~\ref{fig:shap_path} presents the SHAP beeswarm summary for the \textbf{Pathological} class. The most influential predictor is \texttt{histogram\_mean}, where low feature values (blue) are associated with strongly positive SHAP values, pushing predictions toward Pathological. \texttt{histogram\_median} and \texttt{abnormal\_short\_term\_variability} rank second and third, respectively; for \texttt{abnormal\_short\_term\_variability}, high feature values (red/pink) drive large positive SHAP contributions, consistent with the clinical interpretation that elevated short-term variability abnormality is a hallmark of fetal distress. \texttt{prolongued\_decelerations} also contributes positively at high values, reflecting the known association between prolonged heart-rate decelerations and fetal hypoxia. The remaining features exhibit SHAP distributions clustered near zero, indicating limited marginal contribution to Pathological-class predictions.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{picture/fig_shap_pathological.png}
+\caption{SHAP beeswarm summary for the Pathological class (Random Forest). Each point is one sample; colour encodes feature value (red = high, blue = low). Features are ranked by mean $|\phi_j|$. Low \texttt{histogram\_mean} and high \texttt{abnormal\_short\_term\_variability} are the dominant drivers of Pathological predictions.}
+\Description{Beeswarm plot for Pathological class. Top features: histogram\_mean (low values positive SHAP), histogram\_median, abnormal\_short\_term\_variability (high values positive SHAP). SHAP magnitudes up to 0.8.}
+\label{fig:shap_path}
+\end{figure}
+
+% -------------------------------------------------
+\subsection{SHAP Explainability --- Suspect Class}
+\label{subsec:shap_susp}
+
+Figure~\ref{fig:shap_susp} presents the corresponding SHAP beeswarm summary for the \textbf{Suspect} class. \texttt{accelerations} is the top-ranked feature: low acceleration counts (blue) are associated with positive SHAP values pushing predictions toward Suspect, consistent with the clinical understanding that reduced accelerations are an early warning sign. \texttt{percentage\_of\_time\_with\_abnormal\_long\_term\_variability} ranks second, with high values (red) contributing positively to Suspect predictions. Compared to the Pathological SHAP profile, Suspect predictions show a more diffuse importance distribution and smaller SHAP magnitudes ($|\phi_j| \lesssim 0.25$), reflecting the greater class overlap between Normal and Suspect in the feature space.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.45\textwidth]{picture/fig_shap_suspect.png}
+\caption{SHAP beeswarm summary for the Suspect class (Random Forest). \texttt{accelerations} is the dominant predictor: low values push predictions toward Suspect. SHAP magnitudes are smaller than for the Pathological class, reflecting greater feature-space overlap between Normal and Suspect.}
+\Description{Beeswarm plot for Suspect class. Top features: accelerations (low values positive SHAP, magnitude ~0.2), percentage\_of\_time\_with\_abnormal\_long\_term\_variability (high values positive SHAP).}
+\label{fig:shap_susp}
+\end{figure}
+
+% ============================================
+% 5. DISCUSSION
+% ============================================
+\section{Discussion}
+\label{sec:discussion}
+
+The results indicate that the proposed leakage-free imbalanced-learning pipeline can achieve strong class-balanced performance for CTG-based fetal health classification. As shown in Table~\ref{tab:cv}, among the evaluated approaches, \textbf{Random Forest (RF)} achieved the highest cross-validated macro recall and demonstrated strong sensitivity for the minority \textbf{Pathological} class on the held-out test set. Two key factors likely contributed to this performance: (i) the ability of RF to model nonlinear interactions among engineered CTG features, and (ii) the explicit mitigation of class imbalance through SMOTE applied strictly within each training fold, reducing bias toward the majority (\textbf{Normal}) class while preserving an unbiased evaluation protocol.
+
+Random Forest is particularly well-suited for this task because CTG features often exhibit complex nonlinear relationships, such as interactions between variability measures, deceleration patterns, and histogram-derived descriptors. Ensemble averaging across multiple decorrelated decision trees produces more stable decision boundaries and reduces variance compared to a single Decision Tree (DT), which is consistent with the observed performance gap between RF and DT under cross-validation. Furthermore, the use of \texttt{class\_weight = "balanced"} increases the penalty for misclassifying minority classes, complementing the resampling strategy.
+
+A key methodological contribution of this work is the strict prevention of data leakage during preprocessing and resampling. Performing oversampling prior to cross-validation splitting can allow information from validation folds to influence training through synthetic sample generation, leading to overly optimistic performance estimates. By integrating feature scaling and SMOTE within the cross-validation loop, the reported results more accurately reflect expected generalization performance. This design choice is particularly important in clinical decision-support settings, where reliability and reproducibility are critical.
+
+Beyond predictive performance, interpretability is essential for clinical applicability and user trust. Global SHAP analysis (see Figure~\ref{fig:shap_path}) identified \texttt{abnormal\_short\_term\_variability}, \texttt{histogram\_mean}, and \texttt{prolongued\_decelerations} as the most influential predictors for the Pathological class. These findings align with established clinical knowledge \cite{ayres2015}, where abnormal variability and deceleration patterns are key indicators of fetal distress, and shifts in baseline heart rate carry diagnostic significance. Although SHAP does not imply causality, this consistency supports the face validity of the model and provides insight into the feature contributions underlying high-risk predictions.
+
+\subsection{Limitations}
+\label{subsec:limitations}
+This study has several limitations. First, the evaluation was conducted on a single retrospective dataset with engineered features rather than raw cardiotocography (CTG) waveforms; therefore, the results may not generalize directly to different populations, devices, or feature-extraction pipelines. Second, although the held-out test split provides an additional estimate of out-of-sample performance, external validation on independent multi-center cohorts is required prior to clinical deployment. Finally, the clinical labels reflect a specific annotation protocol, and potential label noise or inter-rater variability may impose an upper bound on achievable performance.
+
+% ============================================
+% 6. CONCLUSION
+% ============================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented a leakage-free and explainable machine learning pipeline for imbalanced three-class fetal health classification using cardiotocography (CTG) features. By applying feature standardization (\texttt{StandardScaler}) and synthetic minority oversampling (SMOTE) strictly within each cross-validation training fold, and selecting models based on macro-averaged recall, the proposed approach prioritizes balanced sensitivity across all classes.
+
+Among the evaluated models, Random Forest achieved the highest cross-validated macro recall and demonstrated strong recall for the clinically critical Pathological class on the held-out test set. Furthermore, SHAP-based interpretability provided feature-level transparency, identifying key contributors to high-risk predictions that align with FIGO consensus guidelines \cite{ayres2015}. Future work will focus on external validation using larger, multi-center datasets and evaluating robustness across different acquisition settings to better assess real-world clinical utility.
+
+% ============================================
+% REFERENCES
+% ============================================
+\clearpage  
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{refs}
+
+\end{document}
